@@ -210,7 +210,7 @@
 <!-- 입고 삭제 -->
 	<update id="deleteStIn" parameterType="SIMStInDto">
 		UPDATE	ST_IN
-		SET 	IN_TYPE = '저장'
+		SET 	DELETE_STATUS = 'Y'
 		WHERE	IN_CODE = #{inCode}
 	</update>
 

@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.choongang.yeonsolution.product.sim.domain.StInDetailDto;
 import com.choongang.yeonsolution.product.sim.domain.StInDto;
 import com.choongang.yeonsolution.product.sim.service.SIMService;
+import com.choongang.yeonsolution.standard.am.security.UserDetailsDto;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -62,7 +64,7 @@ public class SIMController {
 //		return "product/sim/in-register";
 //	}
 //	
-	/** 검색 조회 */
+	/** 검색 조회, 입고 저장 삭제 확정 확정취소 */
 	@RequestMapping(value = "/btn/{action}")
 	public String find(	@PathVariable(name = "action")String action,
 						@RequestParam(required = false)Map<String, Object> data,
@@ -94,7 +96,7 @@ public class SIMController {
 		return "redirect:/product/sim/status";
 	}
 	
-	/** Ajax 등록, 수정, 삭제 */
+	/** Ajax 입고상세 등록, 수정, 삭제 */
 	@RequestMapping(value = "/ajax/{action}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Map<String, String>> inModify(@PathVariable(name = "action")String action,
 	                                                    @RequestBody(required = false)List<StInDetailDto> sidList) {
@@ -187,7 +189,10 @@ public class SIMController {
 	/** Ajax 입고 등록 */
 	@PostMapping(value = "/ajax/register")
 	@ResponseBody
-	public ResponseEntity<String> stInSave(@RequestBody(required = false) Map<String, Object> data) {
+	public ResponseEntity<String> stInSave( @RequestBody(required = false) Map<String, Object> data,
+											@AuthenticationPrincipal UserDetailsDto userDetailsDto) {
+		String loginUser = null;
+		if(userDetailsDto != null) loginUser = userDetailsDto.getMemberDto().getMemberName();
 		
 		ObjectMapper om = new ObjectMapper();
 		om.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
@@ -199,6 +204,7 @@ public class SIMController {
 		stInDto.setInDate(inDate.replace("-", "/"));		
 
 		System.out.println("\n입고 등록 이벤트\n"+data);
+		stInDto.setRegUser(loginUser);
 		simService.addStIn(stInDto);
 		
 		return ResponseEntity.ok("등록 완료");
